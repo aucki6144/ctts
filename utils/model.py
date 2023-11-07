@@ -19,6 +19,11 @@ def get_model(args, configs, device, train=False):
         )
         ckpt = torch.load(ckpt_path)
         model.load_state_dict(ckpt["model"])
+        print("Loading model from checkpoint: {}".format(ckpt_path))
+    elif args.pretrain_path:
+        ckpt = torch.load(args.pretrain_path)
+        model.load_state_dict(ckpt["model"], strict=False)
+        print("Loading model from path: {}".format(args.pretrain_path))
 
     if train:
         scheduled_optim = ScheduledOptim(
@@ -27,6 +32,7 @@ def get_model(args, configs, device, train=False):
         if args.restore_step:
             scheduled_optim.load_state_dict(ckpt["optimizer"])
         model.train()
+        print("Model load mode: Train")
         return model, scheduled_optim
 
     model.eval()
@@ -80,8 +86,8 @@ def vocoder_infer(mels, vocoder, model_config, preprocess_config, lengths=None):
             wavs = vocoder(mels).squeeze(1)
 
     wavs = (
-        wavs.cpu().numpy()
-        * preprocess_config["preprocessing"]["audio"]["max_wav_value"]
+            wavs.cpu().numpy()
+            * preprocess_config["preprocessing"]["audio"]["max_wav_value"]
     ).astype("int16")
     wavs = [wav for wav in wavs]
 

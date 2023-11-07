@@ -16,7 +16,7 @@ from utils.tools import to_device, synth_samples
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def synthesize_speech(text, speaker, emotion, pitch_control, energy_control, duration_control, step):
+def synthesize_speech(text, speaker, emotion, pitch_control, energy_control, duration_control, model_name, step):
 
     # Parse speaker
     match = re.search(r'Speaker(\d+)', speaker)
@@ -40,9 +40,9 @@ def synthesize_speech(text, speaker, emotion, pitch_control, energy_control, dur
     duration_control = float(duration_control)
 
     # Get path by model name
-    preprocess_config_path = os.path.join("./config/ESD_en/preprocess.yaml")
-    model_config_path = os.path.join("./config/ESD_en/model.yaml")
-    train_config_path = os.path.join("./config/ESD_en/train.yaml")
+    preprocess_config_path = os.path.join("./config/{}/preprocess.yaml".format(model_name))
+    model_config_path = os.path.join("./config/{}/model.yaml".format(model_name))
+    train_config_path = os.path.join("./config/{}/train.yaml".format(model_name))
 
     # Read Config
     preprocess_config = yaml.load(
@@ -99,9 +99,9 @@ def synthesize_speech(text, speaker, emotion, pitch_control, energy_control, dur
     return pic_path_name, wav_path_name
 
 
-def gr_interface(text, speaker, emotion, pitch_control, energy_control, duration_control, step):
+def gr_interface(text, speaker, emotion, pitch_control, energy_control, duration_control, model_name, step):
     pic_path_name, wav_path_name = (
-        synthesize_speech(text, speaker, emotion, pitch_control, energy_control, duration_control, step))
+        synthesize_speech(text, speaker, emotion, pitch_control, energy_control, duration_control, model_name, step))
     if os.path.exists(pic_path_name) and os.path.exists(wav_path_name):
         return pic_path_name, wav_path_name
     else:
@@ -110,26 +110,29 @@ def gr_interface(text, speaker, emotion, pitch_control, energy_control, duration
         raise ValueError("Cannot find path of png/wav file")
 
 
-iface = gr.Interface(
-    fn=gr_interface,
-    inputs=[
-        Textbox(lines=3, placeholder="Type in your content...", label="Text"),
-        Dropdown(
-            choices=["Speaker1", "Speaker2", "Speaker3", "Speaker4", "Speaker5", "Speaker6", "Speaker7", "Speaker8",
-                     "Speaker9",
-                     "Speaker10"], label="Speaker"),
-        Radio(choices=["Neutral", "Angry", "Happy", "Sad", "Surprise"], label="Emotion"),
-        Textbox(lines=1, placeholder="Float number accepted", label="Pitch Control", value="1.0"),
-        Textbox(lines=1, placeholder="Float number accepted", label="Energy Control", value="1.0"),
-        Textbox(lines=1, placeholder="Float number accepted", label="Duration Control", value="1.0"),
-        Textbox(lines=1, placeholder="Int number accepted", label="Step", value="5000"),
-    ],
-    outputs=[
-        Image(type="filepath", label="Mel Spectrogram"),
-        Audio(type="filepath", label="Model Output Audio"),
-    ],
-    title="FastSpeech2 with speaker and emotion embedding",
-    description= "This is a PyTorch implementation of Microsoft's text-to-speech system FastSpeech 2: Fast and High-Quality End-to-End Text to Speech. This project is based on xcmyz's implementation of FastSpeech. Code based on https://github.com/ming024/FastSpeech2. More details can be found in the origin repo."
-)
+if __name__ == "__main__":
+    iface = gr.Interface(
+        fn=gr_interface,
+        inputs=[
+            Textbox(lines=3, placeholder="Type in your content...", label="Text"),
+            Dropdown(
+                choices=["Speaker1", "Speaker2", "Speaker3", "Speaker4", "Speaker5", "Speaker6", "Speaker7", "Speaker8",
+                         "Speaker9",
+                         "Speaker10"], label="Speaker"),
+            Radio(choices=["Neutral", "Angry", "Happy", "Sad", "Surprise"], label="Emotion"),
+            Textbox(lines=1, placeholder="Float number accepted", label="Pitch Control", value="1.0"),
+            Textbox(lines=1, placeholder="Float number accepted", label="Energy Control", value="1.0"),
+            Textbox(lines=1, placeholder="Float number accepted", label="Duration Control", value="1.0"),
+            Dropdown(
+                choices=["LJSpeech", "ESD_en"], label="Database"),
+            Textbox(lines=1, placeholder="Int number accepted", label="Checkpoint step", value="5000"),
+        ],
+        outputs=[
+            Image(type="filepath", label="Mel Spectrogram"),
+            Audio(type="filepath", label="Model Output Audio"),
+        ],
+        title="FastSpeech2 with speaker and emotion embedding",
+        description="This is a PyTorch implementation of Microsoft's text-to-speech system FastSpeech 2: Fast and High-Quality End-to-End Text to Speech. This project is based on xcmyz's implementation of FastSpeech. Code based on https://github.com/ming024/FastSpeech2. More details can be found in the origin repo."
+    )
 
-iface.launch()
+    iface.launch()

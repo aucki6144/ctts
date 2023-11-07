@@ -155,10 +155,18 @@ def main(args, configs):
                     model.train()
 
                 # Save checkpoint
+                # Ignore some parameters
                 if step % save_step == 0:
+                    model_state_dict = model.module.state_dict()
+                    params_to_skip = ['speaker_emb.weight', 'emotion_emb.weight']
+
+                    for param in params_to_skip:
+                        if param in model_state_dict:
+                            del model_state_dict[param]
+
                     torch.save(
                         {
-                            "model": model.module.state_dict(),
+                            "model": model_state_dict,
                             "optimizer": optimizer._optimizer.state_dict(),
                         },
                         os.path.join(
@@ -205,6 +213,12 @@ if __name__ == "__main__":
         type=str,
         help="path to train.yaml"
     )
+
+    parser.add_argument(
+        "-pp",
+        "--pretrain_path",
+        type=str)
+
     args = parser.parse_args()
 
     # Get path by model name

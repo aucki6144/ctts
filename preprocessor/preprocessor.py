@@ -58,7 +58,7 @@ class Preprocessor:
         os.makedirs((os.path.join(self.out_dir, "energy")), exist_ok=True)
         os.makedirs((os.path.join(self.out_dir, "duration")), exist_ok=True)
 
-        print("Processing Data ...")
+        print("Processing Data for Dataset: {}".format(self.dataset))
         out = list()
         n_frames = 0
         pitch_scaler = StandardScaler()
@@ -275,6 +275,15 @@ class Preprocessor:
                     mel_spectrogram.shape[1],
                 )
 
+        if self.dataset == "LJSpeech":
+            raw_emotion = "Neutral"
+            return (
+                "|".join([basename, speaker, text, raw_text, raw_emotion]),
+                self.remove_outlier(pitch),
+                self.remove_outlier(energy),
+                mel_spectrogram.shape[1],
+            )
+
         return (
             "|".join([basename, speaker, text, raw_text]),
             self.remove_outlier(pitch),
@@ -351,6 +360,8 @@ class Preprocessor:
             emotion_ls = ["中立", "生气", "快乐", "伤心", "惊喜"]
         elif self.dataset == "ESD_en":
             emotion_ls = ["Neutral", "Angry", "Happy", "Sad", "Surprise"]
+        elif self.dataset == "LJSpeech":
+            emotion_ls = ["Neutral"]
         emotions = {}
         for i, emotion in enumerate(emotion_ls):
             emotions[emotion] = i

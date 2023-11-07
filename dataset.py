@@ -14,6 +14,7 @@ class Dataset(Dataset):
         self, filename, preprocess_config, train_config, sort=False, drop_last=False
     ):
         self.dataset_name = preprocess_config["dataset"]
+
         self.preprocessed_path = preprocess_config["path"]["preprocessed_path"]
         self.cleaners = preprocess_config["preprocessing"]["text"]["text_cleaners"]
         self.batch_size = train_config["optimizer"]["batch_size"]
@@ -21,10 +22,11 @@ class Dataset(Dataset):
         self.basename, self.speaker, self.text, self.raw_text, self.emotion = self.process_meta(
             filename
         )
-        with open(os.path.join(self.preprocessed_path, "speakers.json")) as f:
-            self.speaker_map = json.load(f)
         with open(os.path.join(self.preprocessed_path, "emotions.json")) as f:
             self.emotion_map = json.load(f)
+
+        with open(os.path.join(self.preprocessed_path, "speakers.json")) as f:
+            self.speaker_map = json.load(f)
 
         self.sort = sort
         self.drop_last = drop_last
