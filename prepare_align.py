@@ -2,7 +2,7 @@ import argparse
 
 import yaml
 
-from preprocessor import ljspeech, aishell3, libritts, esdzh, esden
+from preprocessor import ljspeech, aishell3, libritts, esdzh, esden, crossLJESD
 
 
 def main(config):
@@ -15,12 +15,15 @@ def main(config):
     if "LibriTTS" in config["dataset"]:
         print("Prepare alignment for LibriTTS")
         libritts.prepare_align(config)
-    if "ESD_zh" in config["dataset"]:  # Add support for ESD dataset
+    if "ESD_zh" in config["dataset"]:
         print("Prepare alignment for ESD")
         esdzh.prepare_align(config)
     if "ESD_en" in config["dataset"]:
         print("Prepare alignment for ESD")
         esden.prepare_align(config)
+    if "Cross_LJESD" in config["dataset"]:
+        print("Prepare alignment for cross dataset of LJSpeech & ESD")
+        crossLJESD.prepare_align(config)
 
 
 if __name__ == "__main__":
