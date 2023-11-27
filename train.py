@@ -155,14 +155,8 @@ def main(args, configs):
                     model.train()
 
                 # Save checkpoint
-                # Ignore some parameters
                 if step % save_step == 0:
                     model_state_dict = model.module.state_dict()
-                    params_to_skip = ['speaker_emb.weight', 'emotion_emb.weight']
-
-                    for param in params_to_skip:
-                        if param in model_state_dict:
-                            del model_state_dict[param]
 
                     torch.save(
                         {
