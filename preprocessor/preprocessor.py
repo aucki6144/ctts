@@ -181,7 +181,7 @@ class Preprocessor:
               ].astype(np.float32)
 
         # Read raw text
-        with open(text_path, "r") as f:
+        with open(text_path, "r", encoding='utf-8') as f:
             raw_text = f.readline().strip("\n")
 
         # Compute fundamental frequency
@@ -264,6 +264,19 @@ class Preprocessor:
 
         # Process emotion info
         if self.dataset == 'ESD_en':
+            emotion_path = os.path.join(self.emo_dir, speaker, "{}.txt".format(basename))
+            if os.path.exists(emotion_path):
+                with open(emotion_path, "r") as f1:
+                    raw_emotion = f1.readline().strip("\n").rstrip()
+                return (
+                    "|".join([basename, speaker, text, raw_text, raw_emotion]),
+                    self.remove_outlier(pitch),
+                    self.remove_outlier(energy),
+                    mel_spectrogram.shape[1],
+                )
+
+        # Process emotion info
+        if self.dataset == 'Cross_LJESD':
             emotion_path = os.path.join(self.emo_dir, speaker, "{}.txt".format(basename))
             if os.path.exists(emotion_path):
                 with open(emotion_path, "r") as f1:
@@ -359,6 +372,8 @@ class Preprocessor:
         if self.dataset == "ESD_zh":
             emotion_ls = ["中立", "生气", "快乐", "伤心", "惊喜"]
         elif self.dataset == "ESD_en":
+            emotion_ls = ["Neutral", "Angry", "Happy", "Sad", "Surprise"]
+        elif self.dataset == "Cross_LJESD":
             emotion_ls = ["Neutral", "Angry", "Happy", "Sad", "Surprise"]
         elif self.dataset == "LJSpeech":
             emotion_ls = ["Neutral"]
