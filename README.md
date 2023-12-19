@@ -1,15 +1,29 @@
-# FastSpeech 2 With Emotion Embedding- PyTorch Implementation
+# CTTS: FastSpeech2 With Emotion Embedding on Pytorch
 
 ## Status
+
+**NEW PROGRESS WILL BE UPDATED HERE!**
+
 **Current progress:**
-- Added support for ESD(Mandarin)
+
+* Standard grading pipeline (CUDA versino confliction, maybe moved to a new repo later)
+
+* Preprocess and test on a new dataset combining LJSpeech and ESD(en part).
+
+* Condition Layer Norm added for emotion control.
+
+- ~~Added support for ESD(Mandarin)~~ Temporarly removed for adjustment on the model itself.
 - ESD(Mandarin) MFA
 - Preprocess of ESD, emotion label included.
 - GUI with gradio
 
 **Todo:**
-- rewrite the following parts: batch inference and controllability.
-- check if all supported datasets work well
+
+* Working on this project: [Speech-Backbones/Grad-TTS at main · huawei-noah/Speech-Backbones · GitHub](https://github.com/huawei-noah/Speech-Backbones/tree/main/Grad-TTS)
+
+* Working on this project: https://github.com/sh-lee-prml/hierspeechpp
+
+- Rewrite gui.py since there are hardcoded configurations in it.
 
 ## Introduction of this repository
 
@@ -45,7 +59,7 @@ To make that work, you must regulate config files in a fixed structure, which sh
   └── └── └── model.yaml
           └── preprocess.yaml
           └── train.yaml
-``` 
+```
 We take ESD_en dataset as an example. For English single-speaker TTS, run
 ```commandline
 python .\synthesize.py -t "YOUR_CONTENT" -m ESD_en
@@ -79,7 +93,7 @@ The supported datasets are
 We take AISHELL3 as an example hereafter.
 
 ## Preprocessing
- 
+
 First, run 
 ```
 python3 prepare_align.py config/AISHELL3/preprocess.yaml
