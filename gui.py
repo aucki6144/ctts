@@ -118,13 +118,13 @@ if __name__ == "__main__":
             Dropdown(
                 choices=["Speaker1", "Speaker2", "Speaker3", "Speaker4", "Speaker5", "Speaker6", "Speaker7", "Speaker8",
                          "Speaker9",
-                         "Speaker10"], label="Speaker"),
+                         "Speaker10", "Speaker11"], label="Speaker"),
             Radio(choices=["Neutral", "Angry", "Happy", "Sad", "Surprise"], label="Emotion"),
             Textbox(lines=1, placeholder="Float number accepted", label="Pitch Control", value="1.0"),
             Textbox(lines=1, placeholder="Float number accepted", label="Energy Control", value="1.0"),
             Textbox(lines=1, placeholder="Float number accepted", label="Duration Control", value="1.0"),
             Dropdown(
-                choices=["LJSpeech", "ESD_en"], label="Database"),
+                choices=["LJSpeech", "ESD_en", "Cross_LJESD"], label="Database"),
             Textbox(lines=1, placeholder="Int number accepted", label="Checkpoint step", value="5000"),
         ],
         outputs=[
