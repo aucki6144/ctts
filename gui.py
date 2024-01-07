@@ -111,28 +111,82 @@ def gr_interface(text, speaker, emotion, pitch_control, energy_control, duration
 
 
 if __name__ == "__main__":
-    iface = gr.Interface(
-        fn=gr_interface,
-        inputs=[
-            Textbox(lines=3, placeholder="Type in your content...", label="Text"),
-            Dropdown(
-                choices=["Speaker1", "Speaker2", "Speaker3", "Speaker4", "Speaker5", "Speaker6", "Speaker7", "Speaker8",
-                         "Speaker9",
-                         "Speaker10", "Speaker11"], label="Speaker"),
-            Radio(choices=["Neutral", "Angry", "Happy", "Sad", "Surprise"], label="Emotion"),
-            Textbox(lines=1, placeholder="Float number accepted", label="Pitch Control", value="1.0"),
-            Textbox(lines=1, placeholder="Float number accepted", label="Energy Control", value="1.0"),
-            Textbox(lines=1, placeholder="Float number accepted", label="Duration Control", value="1.0"),
-            Dropdown(
-                choices=["LJSpeech", "ESD_en", "Cross_LJESD"], label="Database"),
-            Textbox(lines=1, placeholder="Int number accepted", label="Checkpoint step", value="5000"),
-        ],
-        outputs=[
-            Image(type="filepath", label="Mel Spectrogram"),
-            Audio(type="filepath", label="Model Output Audio"),
-        ],
-        title="FastSpeech2 with speaker and emotion embedding",
-        description="This is a PyTorch implementation of Microsoft's text-to-speech system FastSpeech 2: Fast and High-Quality End-to-End Text to Speech. This project is based on xcmyz's implementation of FastSpeech. Code based on https://github.com/ming024/FastSpeech2. More details can be found in the origin repo."
-    )
+    # iface = gr.Interface(
+    #     fn=gr_interface,
+    #     inputs=[
+    #         Textbox(lines=3, placeholder="Type in your content...", label="Text"),
+    #         Dropdown(
+    #             choices=["Speaker1", "Speaker2", "Speaker3", "Speaker4", "Speaker5", "Speaker6", "Speaker7", "Speaker8",
+    #                      "Speaker9",
+    #                      "Speaker10", "Speaker11"], label="Speaker"),
+    #         Radio(choices=["Neutral", "Angry", "Happy", "Sad", "Surprise"], label="Emotion"),
+    #         Textbox(lines=1, placeholder="Float number accepted", label="Pitch Control", value="1.0"),
+    #         Textbox(lines=1, placeholder="Float number accepted", label="Energy Control", value="1.0"),
+    #         Textbox(lines=1, placeholder="Float number accepted", label="Duration Control", value="1.0"),
+    #         Dropdown(
+    #             choices=["LJSpeech", "ESD_en", "Cross_LJESD"], label="Database"),
+    #         Textbox(lines=1, placeholder="Int number accepted", label="Checkpoint step", value="5000"),
+    #     ],
+    #     outputs=[
+    #         Image(type="filepath", label="Mel Spectrogram"),
+    #         Audio(type="filepath", label="Model Output Audio"),
+    #     ],
+    #     title="FastSpeech2 with speaker and emotion embedding",
+    #     description="This is a PyTorch implementation of Microsoft's text-to-speech system FastSpeech 2: Fast and High-Quality End-to-End Text to Speech. This project is based on xcmyz's implementation of FastSpeech. Code based on https://github.com/ming024/FastSpeech2. More details can be found in the origin repo."
+    # )
+    #
+    # iface.launch()
 
-    iface.launch()
+    with gr.Blocks() as demo:
+        # Space for text at the top of the webpage
+        gr.Markdown("### FastSpeech2 with speaker and emotion embedding")
+        gr.Markdown(
+            "This is a PyTorch implementation of Microsoft's text-to-speech system FastSpeech 2: Fast and High-Quality End-to-End Text to Speech. This project is based on xcmyz's implementation of FastSpeech. Code based on https://github.com/ming024/FastSpeech2. More details can be found in the origin repo.")
+
+        # Inputs
+        with gr.Row():
+            text_input = gr.Textbox(lines=3, placeholder="Type in your content...", label="Text")
+            speaker_dropdown = gr.Dropdown(
+                choices=["Speaker1", "Speaker2", "Speaker3", "Speaker4", "Speaker5", "Speaker6", "Speaker7",
+                         "Speaker8",
+                         "Speaker9", "Speaker10", "Speaker11"], label="Speaker")
+
+        with gr.Row():
+            emotion_radio = gr.Radio(choices=["Neutral", "Angry", "Happy", "Sad", "Surprise"], label="Emotion")
+            pitch_control = gr.Textbox(lines=1, placeholder="Float number accepted", label="Pitch Control",
+                                       value="1.0")
+
+        with gr.Row():
+            energy_control = gr.Textbox(lines=1, placeholder="Float number accepted", label="Energy Control",
+                                        value="1.0")
+            duration_control = gr.Textbox(lines=1, placeholder="Float number accepted", label="Duration Control",
+                                          value="1.0")
+
+        with gr.Row():
+            database_dropdown = gr.Dropdown(choices=["LJSpeech", "ESD_en", "Cross_LJESD"], label="Database")
+
+            # Reading all files from a specified folder for user to select
+            # Assuming the folder is named 'checkpoints'
+            checkpoint_files = os.listdir('output/ckpt/Cross_LJESD')
+            checkpoint_step = gr.Dropdown(choices=checkpoint_files, label="Checkpoint step")
+
+        with gr.Row():
+            batch_inference = gr.Checkbox(label="Batch Inference")
+            strict_mode = gr.Checkbox(label="Strict Mode")
+
+        # Button to execute
+        button = gr.Button("Submit")
+
+        # Outputs
+        mel_spectrogram = gr.Image(type="filepath", label="Mel Spectrogram")
+        output_audio = gr.Audio(type="filepath", label="Model Output Audio")
+
+        # Interaction
+        button.click(
+            gr_interface,
+            inputs=[text_input, speaker_dropdown, emotion_radio, pitch_control, energy_control, duration_control,
+                    database_dropdown, checkpoint_step, batch_inference, strict_mode],
+            outputs=[mel_spectrogram, output_audio]
+        )
+
+    demo.launch(server_port=14523)
