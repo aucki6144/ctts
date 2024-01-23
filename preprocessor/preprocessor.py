@@ -276,7 +276,7 @@ class Preprocessor:
                 )
 
         # Process emotion info
-        if self.dataset == 'Cross_LJESD':
+        if self.dataset == 'CEN':
             emotion_path = os.path.join(self.emo_dir, speaker, "{}.txt".format(basename))
             if os.path.exists(emotion_path):
                 with open(emotion_path, "r") as f1:
@@ -373,7 +373,7 @@ class Preprocessor:
             emotion_ls = ["中立", "生气", "快乐", "伤心", "惊喜"]
         elif self.dataset == "ESD_en":
             emotion_ls = ["Neutral", "Angry", "Happy", "Sad", "Surprise"]
-        elif self.dataset == "Cross_LJESD":
+        elif self.dataset == "CEN":
             emotion_ls = ["Neutral", "Angry", "Happy", "Sad", "Surprise"]
         elif self.dataset == "LJSpeech":
             emotion_ls = ["Neutral"]

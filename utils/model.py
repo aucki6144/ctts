@@ -40,6 +40,19 @@ def get_model(args, configs, device, train=False):
     return model
 
 
+def get_model_from_path(configs, device, checkpoint_path):
+    (preprocess_config, model_config, train_config) = configs
+
+    model = FastSpeech2(preprocess_config, model_config).to(device)
+    ckpt = torch.load(checkpoint_path)
+    model.load_state_dict(ckpt["model"])
+    print("Loading model from forced path: {}".format(checkpoint_path))
+
+    model.eval()
+    model.requires_grad_ = False
+    return model
+
+
 def get_param_num(model):
     num_param = sum(param.numel() for param in model.parameters())
     return num_param

@@ -21,7 +21,10 @@ def main(config):
     if "ESD_en" in config["dataset"]:
         print("Prepare alignment for ESD")
         esden.prepare_align(config)
-    if "Cross_LJESD" in config["dataset"]:
+    # if "Cross_LJESD" in config["dataset"]:
+    #     print("Prepare alignment for cross dataset of LJSpeech & ESD")
+    #     crossLJESD.prepare_align(config)
+    if "CEN" in config["dataset"]:
         print("Prepare alignment for cross dataset of LJSpeech & ESD")
         crossLJESD.prepare_align(config)
 
