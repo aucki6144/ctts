@@ -4,9 +4,9 @@
 
 [Controllable TTS - Grader (Github)](https://github.com/aucki6144/ctts_grader)
 
-[Controllable TTS - Grader (Gitee)](https://gitee.com/aucki6144/ctts)
+[Controllable TTS - Grader (Gitee)](https://gitee.com/aucki6144/ctts_grader)
 
-[Controllable TTS (Gitee)](https://gitee.com/aucki6144/ctts_grader)
+[Controllable TTS (Gitee)](https://gitee.com/aucki6144/ctts)
 
 
 ## Status
