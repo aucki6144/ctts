@@ -6,7 +6,7 @@ from string import punctuation
 import torch
 import yaml
 import numpy as np
-# from g2p_en import G2p
+from g2p_en import G2p
 from torch.utils.data import DataLoader
 from pypinyin import pinyin, Style
 
@@ -30,20 +30,20 @@ def read_lexicon(lex_path):
     return lexicon
 
 
-def preprocess_english(text, preprocess_config):
+def preprocess_english(text, preprocess_config, strict=False):
     text = text.rstrip(punctuation)
     lexicon = read_lexicon(preprocess_config["path"]["lexicon_path"])
 
     print("Preprocess Eng!")
 
-    # g2p = G2p()
+    g2p = G2p()
     phones = []
     words = re.split(r"([,;.\-\?\!\s+])", text)
     for w in words:
         if w.lower() in lexicon:
             phones += lexicon[w.lower()]
-        # else:
-        # phones += list(filter(lambda p: p != " ", g2p(w)))
+        elif strict is False:
+            phones += list(filter(lambda p: p != " ", g2p(w)))
         # phones.append("sp")
     phones = "{" + "}{".join(phones) + "}"
     phones = re.sub(r"\{[^\w\s]?\}", "{sp}", phones)

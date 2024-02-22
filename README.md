@@ -1,4 +1,13 @@
-# CTTS: Controllable Text-To-Speech Based on Fastspeech2
+# CTTS: Controllable Text-To-Speech
+
+## Links
+
+[Controllable TTS - Grader (Github)](https://github.com/aucki6144/ctts_grader)
+
+[Controllable TTS - Grader (Gitee)](https://gitee.com/aucki6144/ctts)
+
+[Controllable TTS (Gitee)](https://gitee.com/aucki6144/ctts_grader)
+
 
 ## Status
 
@@ -6,15 +15,17 @@
 
 ### Current progress:
 
+* G2P model added
+
 * GUI code structure updated
 
-* Standard grading pipeline (Due to CUDA version confliction, maybe moved to a new repo later)
+* Standard grading pipeline (Can be accessed from above links)
 
 * Preprocess and test on a new dataset combining LJSpeech and ESD(en part).
 
 * Condition Layer Norm added for emotion control.
 
-* ~~Added support for ESD(Mandarin)~~ Temporarly removed for adjustment on the model itself.
+* ~~Added support for ESD(Mandarin)~~ Temporarily removed for adjustment on the model itself.
 
 * ESD(Mandarin) MFA
 
@@ -26,9 +37,6 @@
 
 * Reconstruct the Naive model (without conditional layer norm) and evaluate it on the new standard grader
 
-* Working on this project: [Speech-Backbones/Grad-TTS at main · huawei-noah/Speech-Backbones · GitHub](https://github.com/huawei-noah/Speech-Backbones/tree/main/Grad-TTS)
-
-* Working on this project: https://github.com/sh-lee-prml/hierspeechpp
 
 ## Quickstart
 

@@ -1,13 +1,12 @@
-import os
 import json
+import os
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from transformer import Encoder, Decoder, PostNet
-from .modules import VarianceAdaptor, SelfAttention
 from utils.tools import get_mask_from_lengths
+from .modules import VarianceAdaptor
 
 
 class FastSpeech2(nn.Module):
