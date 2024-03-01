@@ -3,6 +3,7 @@ import re
 import argparse
 from string import punctuation
 
+import time
 import torch
 import yaml
 import numpy as np
@@ -92,6 +93,8 @@ def synthesize(model, step, configs, vocoder, batchs, control_values):
     preprocess_config, model_config, train_config = configs
     pitch_control, energy_control, duration_control = control_values
 
+    start_time = time.time()
+
     for batch in batchs:
         batch = to_device(batch, device)
         with torch.no_grad():
@@ -110,6 +113,10 @@ def synthesize(model, step, configs, vocoder, batchs, control_values):
                 preprocess_config,
                 train_config["path"]["result_path"],
             )
+
+    end_time = time.time()
+
+    print("Inference time: {}".format(end_time-start_time))
 
 
 if __name__ == "__main__":

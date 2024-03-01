@@ -2,6 +2,7 @@ import argparse
 import os
 import os.path
 import json
+import time
 
 import gradio as gr
 import numpy as np
@@ -89,6 +90,8 @@ def synthesize_speech(text, speaker, emotion, pitch, energy, duration, checkpoin
 
     path_name = ""
 
+    start_time = time.time()
+
     for batch in batches:
         batch = to_device(batch, device)
         with torch.no_grad():
@@ -108,17 +111,23 @@ def synthesize_speech(text, speaker, emotion, pitch, energy, duration, checkpoin
                 train_config["path"]["result_path"],
             )
 
+    end_time = time.time()
+
+    inference_time = end_time - start_time
+
+    print("Inference time: {}".format(inference_time))
+
     pic_path_name = "{}.png".format(path_name)
     wav_path_name = "{}.wav".format(path_name)
 
-    return pic_path_name, wav_path_name
+    return pic_path_name, wav_path_name, inference_time
 
 
 def gr_interface(text, speaker, emotion, pitch, energy, duration, dataset, checkpoint, strict):
-    pic_path_name, wav_path_name = (
+    pic_path_name, wav_path_name, inference_time = (
         synthesize_speech(text, speaker, emotion, pitch, energy, duration, checkpoint, dataset, strict))
     if os.path.exists(pic_path_name) and os.path.exists(wav_path_name):
-        return pic_path_name, wav_path_name
+        return pic_path_name, wav_path_name, inference_time
     else:
         raise ValueError("Cannot find path of png/wav file")
 
@@ -166,6 +175,7 @@ if __name__ == "__main__":
 
                 mel_spectrogram = gr.Image(type="filepath", label="Mel Spectrogram")
                 output_audio = gr.Audio(type="filepath", label="Model Output Audio")
+                output_time = gr.Text(label="Inference Time")
 
         submit_button.click(
             gr_interface,
@@ -178,7 +188,7 @@ if __name__ == "__main__":
                     dataset_select,
                     checkpoint_file,
                     strict_mode],
-            outputs=[mel_spectrogram, output_audio]
+            outputs=[mel_spectrogram, output_audio, output_time]
         )
 
     demo.launch(server_port=14523)
