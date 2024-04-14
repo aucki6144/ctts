@@ -321,3 +321,19 @@ def pad(input_ele, mel_max_length=None):
         out_list.append(one_batch_padded)
     out_padded = torch.stack(out_list)
     return out_padded
+
+
+def detect_language(text):
+    english_chars = 0
+    chinese_chars = 0
+
+    for char in text:
+        if '\u4e00' <= char <= '\u9fff':
+            chinese_chars += 1
+        elif 'a' <= char.lower() <= 'z':
+            english_chars += 1
+
+    if chinese_chars > english_chars:
+        return "Chinese"
+    else:
+        return "English"

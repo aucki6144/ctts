@@ -129,3 +129,6 @@ preprocessed_data/
 demo/
 /temp_script.py
 gui/
+config/LibriTTS_backup/preprocess.yaml
+config/LibriTTS_backup/model.yaml
+config/LibriTTS_backup/train.yaml
