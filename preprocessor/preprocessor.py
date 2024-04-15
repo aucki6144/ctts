@@ -288,7 +288,7 @@ class Preprocessor:
                     mel_spectrogram.shape[1],
                 )
 
-        if self.dataset == "LJSpeech":
+        if self.dataset == "LJSpeech" or self.dataset == "AISHELL3":
             raw_emotion = "Neutral"
             return (
                 "|".join([basename, speaker, text, raw_text, raw_emotion]),
@@ -375,7 +375,7 @@ class Preprocessor:
             emotion_ls = ["Neutral", "Angry", "Happy", "Sad", "Surprise"]
         elif self.dataset == "CEN":
             emotion_ls = ["Neutral", "Angry", "Happy", "Sad", "Surprise"]
-        elif self.dataset == "LJSpeech":
+        elif self.dataset == "LJSpeech" or self.dataset == "AISHELL3":
             emotion_ls = ["Neutral"]
         emotions = {}
         for i, emotion in enumerate(emotion_ls):
