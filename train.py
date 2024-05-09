@@ -1,38 +1,36 @@
 import argparse
 import os
-
 import torch
 import yaml
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
-
 from utils.model import get_model, get_vocoder, get_param_num
 from utils.tools import to_device, log, synth_one_sample
-from model import FastSpeech2Loss
+from models import FastSpeech2Loss
 from dataset import Dataset
-
 from evaluate import evaluate
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def main(args, configs):
-    print("Prepare training ...")
-
-    # Read config
+def prepare_data_loader(configs, sort=True, drop_last=True, group_size=4):
+    """
+    Prepare dataset and dataloader of training
+    @param: configs: a tuple consists of preprocess_config, model_config, train_config
+    @rtype: object
+    @return: a tuple (dataset, loader)
+    """
     preprocess_config, model_config, train_config = configs
     batch_size = train_config["optimizer"]["batch_size"]
 
     # Get dataset
     dataset = Dataset(
-        "train.txt", preprocess_config, train_config, sort=True, drop_last=True
+        "train.txt", preprocess_config, train_config, sort=sort, drop_last=drop_last
     )
 
-    # Set 4 for AISHELL3
-    # Group size is set to 1 for ESD dataset
-    group_size = 4  # Set this larger than 1 to enable sorting in Dataset
+    # Get dataloader
     assert batch_size * group_size < len(dataset)
     loader = DataLoader(
         dataset,
@@ -41,28 +39,41 @@ def main(args, configs):
         collate_fn=dataset.collate_fn,
     )
 
-    # Prepare model
-    model, optimizer = get_model(args, configs, device, train=True, strict_load=False)
-    model = nn.DataParallel(model)
-    num_param = get_param_num(model)
-    Loss = FastSpeech2Loss(preprocess_config, model_config).to(device)
-    print("Number of FastSpeech2 Parameters:", num_param)
+    return dataset, loader
 
-    # Load vocoder
-    vocoder = get_vocoder(model_config, device)
 
-    # Init logger
+def prepare_logger(train_config):
+    """
+    prepare logger for training
+    @param train_config: train_config
+    @return: a tuple consists of (train_log_path, val_log_path, train_logger, val_logger)
+    """
     for p in train_config["path"].values():
         os.makedirs(p, exist_ok=True)
     train_log_path = os.path.join(train_config["path"]["log_path"], "train")
     val_log_path = os.path.join(train_config["path"]["log_path"], "val")
     os.makedirs(train_log_path, exist_ok=True)
     os.makedirs(val_log_path, exist_ok=True)
+
     train_logger = SummaryWriter(train_log_path)
     val_logger = SummaryWriter(val_log_path)
 
+    return train_log_path, val_log_path, train_logger, val_logger
+
+
+def train(configs, data):
+    """
+    The training process of ctts
+    @param configs: a tuple consists of preprocess_config, model_config, train_config
+    @param data: necessary training datas
+    """
+
+    # parse train data
+    preprocess_config, model_config, train_config = configs
+    dataset, loader, model, optimizer, Loss, vocoder, train_log_path, val_log_path, train_logger, val_logger = data
+
     # Training
-    step = args.restore_step + 1
+    step = 1
     epoch = 1
     grad_acc_step = train_config["optimizer"]["grad_acc_step"]
     grad_clip_thresh = train_config["optimizer"]["grad_clip_thresh"]
@@ -72,8 +83,9 @@ def main(args, configs):
     synth_step = train_config["step"]["synth_step"]
     val_step = train_config["step"]["val_step"]
 
+    # Initialize tqdm
     outer_bar = tqdm(total=total_step, desc="Training", position=0)
-    outer_bar.n = args.restore_step
+    outer_bar.n = 0
     outer_bar.update()
 
     while True:
@@ -81,30 +93,26 @@ def main(args, configs):
         for batches in loader:
             for batch in batches:
                 batch = to_device(batch, device)
-
-                # Forward
                 output = model(*(batch[2:]))
-
-                # Cal Loss
                 losses = Loss(batch, output)
                 total_loss = losses[0]
-
-                # Backward
                 total_loss = total_loss / grad_acc_step
                 total_loss.backward()
 
+                # Clipping gradients to avoid gradient explosion
                 if step % grad_acc_step == 0:
-                    # Clipping gradients to avoid gradient explosion
                     nn.utils.clip_grad_norm_(model.parameters(), grad_clip_thresh)
 
                     # Update weights
                     optimizer.step_and_update_lr()
                     optimizer.zero_grad()
 
+                # Save logs
                 if step % log_step == 0:
-                    losses = [l.item() for l in losses]
-                    message1 = "Step {}/{}, ".format(step, total_step)
-                    message2 = "Total Loss: {:.4f}, Mel Loss: {:.4f}, Mel PostNet Loss: {:.4f}, Pitch Loss: {:.4f}, Energy Loss: {:.4f}, Duration Loss: {:.4f}".format(
+                    losses = [loss.item() for loss in losses]
+                    message1 = f"Step {step}/{total_step},"
+                    message2 = ("Total Loss: {:.4f}, Mel Loss: {:.4f}, Mel PostNet Loss: {:.4f}, Pitch Loss: {:.4f}, "
+                                "Energy Loss: {:.4f}, Duration Loss: {:.4f}").format(
                         *losses
                     )
 
@@ -112,7 +120,6 @@ def main(args, configs):
                         f.write(message1 + message2 + "\n")
 
                     outer_bar.write(message1 + message2)
-
                     log(train_logger, step, losses=losses)
 
                 if step % synth_step == 0:
@@ -160,7 +167,7 @@ def main(args, configs):
 
                     torch.save(
                         {
-                            "model": model_state_dict,
+                            "models": model_state_dict,
                             "optimizer": optimizer._optimizer.state_dict(),
                         },
                         os.path.join(
@@ -178,58 +185,84 @@ def main(args, configs):
         epoch += 1
 
 
+def main(args, configs):
+    print("Prepare training ...")
+
+    # Read config
+    preprocess_config, model_config, train_config = configs
+
+    # Get dataset and dataloader
+    dataset, loader = prepare_data_loader(configs)
+
+    # Prepare models
+    model, optimizer = get_model(args, configs, device, train=True, strict_load=False)
+    model = nn.DataParallel(model)
+    num_param = get_param_num(model)
+    Loss = FastSpeech2Loss(preprocess_config, model_config).to(device)
+    print(f"Number of parameters: {num_param}")
+
+    # Load vocoder
+    vocoder = get_vocoder(model_config, device)
+
+    # Init logger
+    train_log_path, val_log_path, train_logger, val_logger = prepare_logger(train_config)
+
+    train_data = (
+        dataset,
+        loader,
+        model,
+        optimizer,
+        Loss,
+        vocoder,
+        train_log_path,
+        val_log_path,
+        train_logger,
+        val_logger
+    )
+
+    # Start training
+    train(configs, train_data)
+
+
 if __name__ == "__main__":
-    torch.manual_seed(1023)
+    # torch.manual_seed(3407)
+
+    config_root = "./config"
     parser = argparse.ArgumentParser()
-    parser.add_argument("--restore_step", type=int, default=0)
 
     parser.add_argument(
         "-m",
         "--model",
         type=str,
-        default=None,
-        required=True,
-        help="Name of the model used"
-    )
-
-    parser.add_argument(
-        "--preprocess_config",
-        type=str,
-        help="path to preprocess.yaml",
-    )
-    parser.add_argument(
-        "--model_config",
-        type=str,
-        help="path to model.yaml"
-    )
-    parser.add_argument(
-        "--train_config",
-        type=str,
-        help="path to train.yaml"
+        default="ESD_en",
+        help="Name of the models used. For example: LJSpeech, ESD_en, ESD_zh"
     )
 
     parser.add_argument(
         "-pp",
         "--pretrain_path",
-        type=str)
+        type=str,
+        help="path to the pretrained models"
+    )
 
-    args = parser.parse_args()
+    input_args = parser.parse_args()
 
-    # Get path by model name
-    preprocess_config_path = os.path.join("./config/", args.model, "preprocess.yaml")
-    model_config_path = os.path.join("./config/", args.model, "model.yaml")
-    train_config_path = os.path.join("./config/", args.model, "train.yaml")
+    # Get path by models name
+    preprocess_config_path = os.path.join("./config/", input_args.model, "preprocess.yaml")
+    model_config_path = os.path.join("./config/", input_args.model, "model.yaml")
+    train_config_path = os.path.join("./config/", input_args.model, "train.yaml")
 
-    # Read Config
-    preprocess_config = yaml.load(
+    # Load config files
+    input_preprocess_config = yaml.load(
         open(preprocess_config_path, "r"), Loader=yaml.FullLoader
     )
-    model_config = yaml.load(
+    input_model_config = yaml.load(
         open(model_config_path, "r"), Loader=yaml.FullLoader
     )
-    train_config = yaml.load(
+    input_train_config = yaml.load(
         open(train_config_path, "r"), Loader=yaml.FullLoader
     )
-    configs = (preprocess_config, model_config, train_config)
+    input_configs = (input_preprocess_config, input_model_config, input_train_config)
 
-    main(args, configs)
+    # Start train
+    main(input_args, input_configs)

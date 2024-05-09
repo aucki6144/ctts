@@ -124,7 +124,6 @@ preprocessed_data/
 /eng_with_pinyin.txt
 /home
 /flagged/
-/cross_ljspeech_esden.py
 
 demo/
 /temp_script.py

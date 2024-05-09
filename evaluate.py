@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 
 from utils.model import get_model, get_vocoder
 from utils.tools import to_device, log, synth_one_sample
-from model import FastSpeech2Loss
+from models import FastSpeech2Loss
 from dataset import Dataset
 
 
@@ -98,7 +98,7 @@ if __name__ == "__main__":
         help="path to preprocess.yaml",
     )
     parser.add_argument(
-        "-m", "--model_config", type=str, required=True, help="path to model.yaml"
+        "-m", "--model_config", type=str, required=True, help="path to models.yaml"
     )
     parser.add_argument(
         "-t", "--train_config", type=str, required=True, help="path to train.yaml"
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     train_config = yaml.load(open(args.train_config, "r"), Loader=yaml.FullLoader)
     configs = (preprocess_config, model_config, train_config)
 
-    # Get model
+    # Get models
     model = get_model(args, configs, device, train=False).to(device)
 
     message = evaluate(model, args.restore_step, configs)

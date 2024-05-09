@@ -32,6 +32,8 @@ multi_speaker: True
 
 emotion_emb: True
 
+condition_emb: True
+
 max_seq_len: 1000
 
 vocoder:

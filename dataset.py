@@ -11,7 +11,7 @@ from utils.tools import pad_1D, pad_2D
 
 class Dataset(Dataset):
     def __init__(
-        self, filename, preprocess_config, train_config, sort=False, drop_last=False
+            self, filename, preprocess_config, train_config, sort=False, drop_last=False
     ):
         self.dataset_name = preprocess_config["dataset"]
 
@@ -67,10 +67,6 @@ class Dataset(Dataset):
         )
         duration = np.load(duration_path)
 
-        # print("getItem: {}".format(speaker_id))
-        # print("getItem: Emotion {}".format(emotion))
-        # print("getItem: Emotion id {}".format(emotion_id))
-
         sample = {
             "id": basename,
             "speaker": speaker_id,
@@ -87,7 +83,7 @@ class Dataset(Dataset):
 
     def process_meta(self, filename):
         with open(
-            os.path.join(self.preprocessed_path, filename), "r", encoding="utf-8"
+                os.path.join(self.preprocessed_path, filename), "r", encoding="utf-8"
         ) as f:
             name = []
             speaker = []
@@ -149,7 +145,7 @@ class Dataset(Dataset):
         else:
             idx_arr = np.arange(data_size)
 
-        tail = idx_arr[len(idx_arr) - (len(idx_arr) % self.batch_size) :]
+        tail = idx_arr[len(idx_arr) - (len(idx_arr) % self.batch_size):]
         idx_arr = idx_arr[: len(idx_arr) - (len(idx_arr) % self.batch_size)]
         idx_arr = idx_arr.reshape((-1, self.batch_size)).tolist()
         if not self.drop_last and len(tail) > 0:
@@ -166,15 +162,22 @@ class TextDataset(Dataset):
     def __init__(self, filepath, preprocess_config):
         self.cleaners = preprocess_config["preprocessing"]["text"]["text_cleaners"]
 
-        self.basename, self.speaker, self.text, self.raw_text = self.process_meta(
+        self.basename, self.speaker, self.emotion, self.text, self.raw_text = self.process_meta(
             filepath
         )
         with open(
-            os.path.join(
-                preprocess_config["path"]["preprocessed_path"], "speakers.json"
-            )
+                os.path.join(
+                    preprocess_config["path"]["preprocessed_path"], "speakers.json"
+                )
         ) as f:
             self.speaker_map = json.load(f)
+
+        with open(
+                os.path.join(
+                    preprocess_config["path"]["preprocessed_path"], "emotions.json"
+                )
+        ) as f:
+            self.emotion_map = json.load(f)
 
     def __len__(self):
         return len(self.text)
@@ -183,10 +186,12 @@ class TextDataset(Dataset):
         basename = self.basename[idx]
         speaker = self.speaker[idx]
         speaker_id = self.speaker_map[speaker]
+        emotion = self.emotion[idx]
+        emotion_id = self.emotion_map[emotion]
         raw_text = self.raw_text[idx]
         phone = np.array(text_to_sequence(self.text[idx], self.cleaners))
 
-        return (basename, speaker_id, phone, raw_text)
+        return basename, speaker_id, emotion_id, phone, raw_text
 
     def process_meta(self, filename):
         with open(filename, "r", encoding="utf-8") as f:
@@ -194,24 +199,27 @@ class TextDataset(Dataset):
             speaker = []
             text = []
             raw_text = []
+            emotion = []
             for line in f.readlines():
-                n, s, t, r = line.strip("\n").split("|")
+                n, s, t, r, e = line.strip("\n").split("|")
                 name.append(n)
                 speaker.append(s)
+                emotion.append(e)
                 text.append(t)
                 raw_text.append(r)
-            return name, speaker, text, raw_text
+            return name, speaker, emotion, text, raw_text
 
     def collate_fn(self, data):
         ids = [d[0] for d in data]
         speakers = np.array([d[1] for d in data])
-        texts = [d[2] for d in data]
-        raw_texts = [d[3] for d in data]
+        emotions = np.array([d[2] for d in data])
+        texts = [d[3] for d in data]
+        raw_texts = [d[4] for d in data]
         text_lens = np.array([text.shape[0] for text in texts])
 
         texts = pad_1D(texts)
 
-        return ids, raw_texts, speakers, texts, text_lens, max(text_lens)
+        return ids, raw_texts, speakers, emotions, texts, text_lens, max(text_lens)
 
 
 if __name__ == "__main__":

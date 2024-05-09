@@ -5,31 +5,28 @@ import torch
 import numpy as np
 
 import hifigan
-from model import FastSpeech2, ScheduledOptim
+from models import FastSpeech2, ScheduledOptim
 
 
 def get_model(args, configs, device, train=False, strict_load=False):
     (preprocess_config, model_config, train_config) = configs
 
     model = FastSpeech2(preprocess_config, model_config).to(device)
-    if args.restore_step:
-        ckpt_path = os.path.join(
-            train_config["path"]["ckpt_path"],
-            "{}.pth.tar".format(args.restore_step),
-        )
-        ckpt = torch.load(ckpt_path)
-        model.load_state_dict(ckpt["model"])
-        print("Loading model from checkpoint: {}".format(ckpt_path))
-    elif args.pretrain_path:
+
+    if not train and args.checkpoint_path:
+        ckpt = torch.load(args.checkpoint_path)
+        model.load_state_dict(ckpt["model"], strict=strict_load)
+        print(f"Loading checkpoint from path: {args.checkpoint_path}")
+    elif train and args.pretrain_path:
         ckpt = torch.load(args.pretrain_path)
         model.load_state_dict(ckpt["model"], strict=strict_load)
-        print("Loading model from path: {}".format(args.pretrain_path))
+        print(f"Loading pretrain checkpoint from path: {args.pretrain_path}")
 
     if train:
         scheduled_optim = ScheduledOptim(
-            model, train_config, model_config, args.restore_step
+            model, train_config, model_config
         )
-        if args.restore_step:
+        if args.pretrain_path:
             scheduled_optim.load_state_dict(ckpt["optimizer"])
         model.train()
         print("Model load mode: Train")
@@ -46,7 +43,7 @@ def get_model_from_path(configs, device, checkpoint_path):
     model = FastSpeech2(preprocess_config, model_config).to(device)
     ckpt = torch.load(checkpoint_path)
     model.load_state_dict(ckpt["model"])
-    print("Loading model from forced path: {}".format(checkpoint_path))
+    print("Loading models from forced path: {}".format(checkpoint_path))
 
     model.eval()
     model.requires_grad_ = False

@@ -32,14 +32,14 @@ def prepare_align(config):
                         wav.astype(np.int16),
                     )
                     with open(
-                        os.path.join(out_dir, speaker, "{}.lab".format(wav_name)),
-                        "w",
-                        encoding="utf-8"
+                            os.path.join(out_dir, speaker, "{}.lab".format(wav_name)),
+                            "w",
+                            encoding="utf-8"
                     ) as f1:
                         f1.write(text)
                     with open(
-                        os.path.join(emo_dir, speaker, "{}.txt".format(wav_name)),
-                        "w",
-                        encoding="utf-8"
+                            os.path.join(emo_dir, speaker, "{}.txt".format(wav_name)),
+                            "w",
+                            encoding="utf-8"
                     ) as f2:
                         f2.write(emo_name)

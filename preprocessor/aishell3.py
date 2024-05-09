@@ -29,7 +29,7 @@ def prepare_align(config):
                         wav.astype(np.int16),
                     )
                     with open(
-                        os.path.join(out_dir, speaker, "{}.lab".format(wav_name[:11])),
-                        "w",
+                            os.path.join(out_dir, speaker, "{}.lab".format(wav_name[:11])),
+                            "w",
                     ) as f1:
                         f1.write(" ".join(text))

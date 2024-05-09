@@ -45,19 +45,19 @@ def synthesize_speech(text, speaker, emotion, pitch, energy, duration, checkpoin
     dataset_name = dataset
 
     # Parse restore step
-    restore_step = checkpoint.split(".")[0]
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--restore_step", type=int, default=restore_step)
-    args = parser.parse_args()
+    # restore_step = checkpoint.split(".")[0]
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("--restore_step", type=int, default=restore_step)
+    # args = parser.parse_args()
 
     # Parse pitch, energy, duration
     pitch = float(pitch)
     energy = float(energy)
     duration = float(duration)
 
-    # Get path by model name
+    # Get path by models name
     preprocess_config_path = os.path.join("./config/{}/preprocess.yaml".format(dataset_name))
-    model_config_path = os.path.join("./config/{}/model.yaml".format(dataset_name))
+    model_config_path = os.path.join("./config/{}/models.yaml".format(dataset_name))
     train_config_path = os.path.join("./config/{}/train.yaml".format(dataset_name))
 
     # Read config files
@@ -72,7 +72,7 @@ def synthesize_speech(text, speaker, emotion, pitch, energy, duration, checkpoin
     )
     configs = (preprocess_config, model_config, train_config)
 
-    # Get model
+    # Get models
     model = get_model_from_path(configs, device, checkpoint_path=os.path.join(checkpoints_dir, checkpoint))
 
     # Load vocoder
@@ -81,10 +81,7 @@ def synthesize_speech(text, speaker, emotion, pitch, energy, duration, checkpoin
     ids = raw_texts = [text[:100]]
     speakers = np.array([speaker_id])
     emotions = np.array([emotion_id])
-    if preprocess_config["preprocessing"]["text"]["language"] == "en":
-        texts = np.array([synthesize.preprocess_english(text, preprocess_config, strict=strict)])
-    elif preprocess_config["preprocessing"]["text"]["language"] == "zh":
-        texts = np.array([synthesize.preprocess_mandarin(text, preprocess_config)])
+    texts = np.array([synthesize.preprocess_phoneme(text, preprocess_config, strict=strict)])
     text_lens = np.array([len(texts[0])])
     batches = [(ids, raw_texts, speakers, emotions, texts, text_lens, max(text_lens))]
 
@@ -168,9 +165,7 @@ if __name__ == "__main__":
                 gr.Markdown("<h4>Model Configuration</h4>")
                 checkpoint_files = os.listdir(checkpoints_dir)
                 checkpoint_file = gr.Dropdown(choices=checkpoint_files, label="Checkpoint file")
-                # batch_inference = gr.Checkbox(label="Batch Inference")
                 strict_mode = gr.Checkbox(label="Strict Mode")
-                # denoise_mode = gr.Checkbox(label="Denoise Mode")
                 dataset_select = gr.Dropdown(choices=datasets_list, label="Database")
 
                 mel_spectrogram = gr.Image(type="filepath", label="Mel Spectrogram")
@@ -191,4 +186,4 @@ if __name__ == "__main__":
             outputs=[mel_spectrogram, output_audio, output_time]
         )
 
-    demo.launch(server_port=14523)
+    demo.launch()

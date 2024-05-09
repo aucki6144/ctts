@@ -37,13 +37,13 @@ def prepare_align(config):
                         wav.astype(np.int16),
                     )
                     with open(
-                        os.path.join(out_dir, speaker, "{}.lab".format(wav_name)),
-                        "w"
+                            os.path.join(out_dir, speaker, "{}.lab".format(wav_name)),
+                            "w"
                     ) as f1:
                         f1.write(pinyin_str)
                     with open(
-                        os.path.join(emo_dir, speaker, "{}.txt".format(wav_name)),
-                        "w"
+                            os.path.join(emo_dir, speaker, "{}.txt".format(wav_name)),
+                            "w"
                     ) as f2:
                         f2.write(emo_name)
 
