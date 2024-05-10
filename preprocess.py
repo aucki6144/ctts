@@ -12,10 +12,10 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "-m",
-        "--models",
+        "--model",
         type=str,
         default="ESD_en",
-        help="Name of the models used. Supported: LJSpeech, AISHELL3, LibriTTS, ESD_zh, ESD_en"
+        help="Name of the models used. Supported: LJSpeech, AISHELL3, LibriTTS, ESD_zh, ESD_en(DEFAULT)"
     )
 
     input_args = parser.parse_args()
