@@ -1,3 +1,4 @@
+import json
 import os
 import os.path
 import time
@@ -17,6 +18,8 @@ os.environ['https_proxy'] = ''
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 checkpoints_dir = 'gui/checkpoints'
+speaker_list_path = 'gui/speakers.json'
+example_list_path = 'gui/examples.json'
 
 
 def tts(text, speaker, emotion, pitch, energy, duration, checkpoint, strict):
@@ -36,16 +39,8 @@ def tts(text, speaker, emotion, pitch, energy, duration, checkpoint, strict):
     emotion_id = emotions.get(emotion)
 
     # Parse speaker id
-    speaker_id = int(speaker)
-
-    # Parse dataset name
-    dataset_name = "ESD_en"
-
-    # Parse restore step
-    # restore_step = checkpoint.split(".")[0]
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("--restore_step", type=int, default=restore_step)
-    # args = parser.parse_args()
+    speaker_id_dict = load_speaker_dict()
+    speaker_id = int(speaker_id_dict.get(speaker, 0))
 
     # Parse pitch, energy, duration
     pitch = float(pitch)
@@ -53,9 +48,9 @@ def tts(text, speaker, emotion, pitch, energy, duration, checkpoint, strict):
     duration = float(duration)
 
     # Get path by models name
-    preprocess_config_path = os.path.join("./config/{}/preprocess.yaml".format(dataset_name))
-    model_config_path = os.path.join("./config/{}/model.yaml".format(dataset_name))
-    train_config_path = os.path.join("./config/{}/train.yaml".format(dataset_name))
+    preprocess_config_path = os.path.join("./config/ESD_en/preprocess.yaml")
+    model_config_path = os.path.join("./config/ESD_en/model.yaml")
+    train_config_path = os.path.join("./config/ESD_en/train.yaml")
 
     # Read config files
     preprocess_config = yaml.load(
@@ -117,16 +112,37 @@ def tts(text, speaker, emotion, pitch, energy, duration, checkpoint, strict):
     return pic_path_name, wav_path_name, inference_time
 
 
+def load_speaker_dict():
+    # Read speaker list from file
+    with open(speaker_list_path, 'r') as file:
+        speaker_json = json.load(file)
+    raw_dict = {}
+    for item in speaker_json['speaker_list']:
+        raw_dict.update(item)
+    return raw_dict
+
+
+def load_example_list():
+    with open(example_list_path, 'r') as file:
+        example_json = json.load(file)
+    example_list = []
+    for item in example_json['example_list']:
+        example_list.append(list(dict(item).values()))
+    return example_list
+
+
 if __name__ == "__main__":
     checkpoint_files = os.listdir(checkpoints_dir)
     default_checkpoint = checkpoint_files[0]
+
+    speaker_dict = load_speaker_dict()
 
     demo_play = gr.Interface(fn=tts,
                              theme=gr.themes.Soft(),
                              inputs=[
                                  gr.Textbox(max_lines=3, label="Input Text",
                                             value=""),
-                                 gr.Dropdown(choices=[0], label="Speaker"),
+                                 gr.Dropdown(choices=list(speaker_dict.keys()), label="Speaker"),
                                  gr.Radio(choices=["Neutral", "Angry", "Happy", "Sad", "Surprise"],
                                           label="Emotion", value="Neutral"),
                                  gr.Slider(0, 2, 1.0, label="pitch"),
@@ -140,12 +156,12 @@ if __name__ == "__main__":
                                  gr.Audio(type="filepath", label="Model Output Audio"),
                                  gr.Text(label="Inference_time")
                              ],
-                             title='ctts',
+                             title='CTTS: Controllable Text To Speech',
                              description='''
-                             
+                             <center><b>Controllable Text-To-Speech: FastSpeech2 with speaker and emotion embedding, 
+                             bring FastSpeech2 to the next level of its controllability while remaining its 
+                             train/inference efficiency.</b></center>
                              ''',
-                             examples=[
-                                 ["Tester", "0", "Neutral", 1.0, 1.0, 1.0, default_checkpoint, True]
-                             ]
+                             examples=load_example_list()
                              )
     demo_play.launch()
