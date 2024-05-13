@@ -1,7 +1,5 @@
-import argparse
 import os
 import os.path
-import json
 import time
 
 import gradio as gr
@@ -18,11 +16,10 @@ os.environ['https_proxy'] = ''
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# checkpoints_dir = 'gui/checkpoints'
-checkpoints_dir = 'gui/ESD_en'
+checkpoints_dir = 'gui/checkpoints'
 
 
-def synthesize_speech(text, speaker, emotion, pitch, energy, duration, checkpoint, dataset, strict):
+def tts(text, speaker, emotion, pitch, energy, duration, checkpoint, strict):
     """
     @param text: text to generate
     @param speaker: the id of a speaker
@@ -42,7 +39,7 @@ def synthesize_speech(text, speaker, emotion, pitch, energy, duration, checkpoin
     speaker_id = int(speaker)
 
     # Parse dataset name
-    dataset_name = dataset
+    dataset_name = "ESD_en"
 
     # Parse restore step
     # restore_step = checkpoint.split(".")[0]
@@ -57,7 +54,7 @@ def synthesize_speech(text, speaker, emotion, pitch, energy, duration, checkpoin
 
     # Get path by models name
     preprocess_config_path = os.path.join("./config/{}/preprocess.yaml".format(dataset_name))
-    model_config_path = os.path.join("./config/{}/models.yaml".format(dataset_name))
+    model_config_path = os.path.join("./config/{}/model.yaml".format(dataset_name))
     train_config_path = os.path.join("./config/{}/train.yaml".format(dataset_name))
 
     # Read config files
@@ -120,70 +117,35 @@ def synthesize_speech(text, speaker, emotion, pitch, energy, duration, checkpoin
     return pic_path_name, wav_path_name, inference_time
 
 
-def gr_interface(text, speaker, emotion, pitch, energy, duration, dataset, checkpoint, strict):
-    pic_path_name, wav_path_name, inference_time = (
-        synthesize_speech(text, speaker, emotion, pitch, energy, duration, checkpoint, dataset, strict))
-    if os.path.exists(pic_path_name) and os.path.exists(wav_path_name):
-        return pic_path_name, wav_path_name, inference_time
-    else:
-        raise ValueError("Cannot find path of png/wav file")
-
-
-customize_css = """
-body, button, input, select, textarea {
-    font-size: 16px; /* 增加字号 */
-    font-weight: bold; /* 增加字重 */
-}
-"""
-
 if __name__ == "__main__":
-    datasets_file_path = './gui/datasets.json'
+    checkpoint_files = os.listdir(checkpoints_dir)
+    default_checkpoint = checkpoint_files[0]
 
-    with open(datasets_file_path, 'r') as file:
-        datasets_list = json.load(file)
-
-    with gr.Blocks(theme=gr.themes.Soft(), css=customize_css) as demo:
-        gr.Markdown(
-            "<center><h1>Controllable Text-To-Speech: FastSpeech2 with speaker and emotion embedding</h1></center>")
-
-        with gr.Row():
-            with gr.Column():
-                gr.Markdown("<h4>Content Configuration</h4>")
-                text_input = gr.Textbox(lines=3, placeholder="Type in your content...", label="Text")
-                speaker_control = gr.Textbox(lines=1, placeholder="Select speaker id", label="speaker", value="1")
-                pitch_control = gr.Textbox(lines=1, placeholder="Float number accepted", label="Pitch Control",
-                                           value="1.0")
-                energy_control = gr.Textbox(lines=1, placeholder="Float number accepted", label="Energy Control",
-                                            value="1.0")
-                duration_control = gr.Textbox(lines=1, placeholder="Float number accepted", label="Duration Control",
-                                              value="1.0")
-                emotion_radio = gr.Radio(choices=["Neutral", "Angry", "Happy", "Sad", "Surprise"],
-                                         label="Emotion", value="Neutral")
-                submit_button = gr.Button("Generate")
-
-            with gr.Column():
-                gr.Markdown("<h4>Model Configuration</h4>")
-                checkpoint_files = os.listdir(checkpoints_dir)
-                checkpoint_file = gr.Dropdown(choices=checkpoint_files, label="Checkpoint file")
-                strict_mode = gr.Checkbox(label="Strict Mode")
-                dataset_select = gr.Dropdown(choices=datasets_list, label="Database")
-
-                mel_spectrogram = gr.Image(type="filepath", label="Mel Spectrogram")
-                output_audio = gr.Audio(type="filepath", label="Model Output Audio")
-                output_time = gr.Text(label="Inference Time")
-
-        submit_button.click(
-            gr_interface,
-            inputs=[text_input,
-                    speaker_control,
-                    emotion_radio,
-                    pitch_control,
-                    energy_control,
-                    duration_control,
-                    dataset_select,
-                    checkpoint_file,
-                    strict_mode],
-            outputs=[mel_spectrogram, output_audio, output_time]
-        )
-
-    demo.launch()
+    demo_play = gr.Interface(fn=tts,
+                             theme=gr.themes.Soft(),
+                             inputs=[
+                                 gr.Textbox(max_lines=3, label="Input Text",
+                                            value=""),
+                                 gr.Dropdown(choices=[0], label="Speaker"),
+                                 gr.Radio(choices=["Neutral", "Angry", "Happy", "Sad", "Surprise"],
+                                          label="Emotion", value="Neutral"),
+                                 gr.Slider(0, 2, 1.0, label="pitch"),
+                                 gr.Slider(0, 2, 1.0, label="duration"),
+                                 gr.Slider(0, 2, 1.0, label="energy"),
+                                 gr.Dropdown(choices=checkpoint_files, label="Checkpoint file"),
+                                 gr.Checkbox(label="Strict Mode")
+                             ],
+                             outputs=[
+                                 gr.Image(type="filepath", label="Mel Spectrogram"),
+                                 gr.Audio(type="filepath", label="Model Output Audio"),
+                                 gr.Text(label="Inference_time")
+                             ],
+                             title='ctts',
+                             description='''
+                             
+                             ''',
+                             examples=[
+                                 ["Tester", "0", "Neutral", 1.0, 1.0, 1.0, default_checkpoint, True]
+                             ]
+                             )
+    demo_play.launch()

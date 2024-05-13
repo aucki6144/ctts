@@ -275,19 +275,6 @@ class Preprocessor:
                     mel_spectrogram.shape[1],
                 )
 
-        # Process emotion info
-        if self.dataset == 'CEN':
-            emotion_path = os.path.join(self.emo_dir, speaker, "{}.txt".format(basename))
-            if os.path.exists(emotion_path):
-                with open(emotion_path, "r") as f1:
-                    raw_emotion = f1.readline().strip("\n").rstrip()
-                return (
-                    "|".join([basename, speaker, text, raw_text, raw_emotion]),
-                    self.remove_outlier(pitch),
-                    self.remove_outlier(energy),
-                    mel_spectrogram.shape[1],
-                )
-
         if self.dataset == "LJSpeech" or self.dataset == "AISHELL3":
             raw_emotion = "Neutral"
             return (
@@ -372,8 +359,6 @@ class Preprocessor:
         if self.dataset == "ESD_zh":
             emotion_ls = ["中立", "生气", "快乐", "伤心", "惊喜"]
         elif self.dataset == "ESD_en":
-            emotion_ls = ["Neutral", "Angry", "Happy", "Sad", "Surprise"]
-        elif self.dataset == "CEN":
             emotion_ls = ["Neutral", "Angry", "Happy", "Sad", "Surprise"]
         elif self.dataset == "LJSpeech" or self.dataset == "AISHELL3":
             emotion_ls = ["Neutral"]
