@@ -162,6 +162,7 @@ if __name__ == "__main__":
                              bring FastSpeech2 to the next level of its controllability while remaining its 
                              train/inference efficiency.</b></center>
                              ''',
-                             examples=load_example_list()
+                             examples=load_example_list(),
+                             allow_flagging="never"
                              )
     demo_play.launch()

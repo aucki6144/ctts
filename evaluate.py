@@ -1,16 +1,13 @@
 import argparse
-import os
 
 import torch
 import yaml
-import torch.nn as nn
 from torch.utils.data import DataLoader
 
-from utils.model import get_model, get_vocoder
-from utils.tools import to_device, log, synth_one_sample
-from models import FastSpeech2Loss
 from dataset import Dataset
-
+from models import FastSpeech2Loss
+from utils.model import get_model
+from utils.tools import to_device, log, synth_one_sample
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -87,7 +84,6 @@ def evaluate(model, step, configs, logger=None, vocoder=None):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--restore_step", type=int, default=30000)
     parser.add_argument(
