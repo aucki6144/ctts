@@ -1,8 +1,7 @@
-import os
 import json
 
-import torch
 import numpy as np
+import torch
 
 import hifigan
 from models import FastSpeech2, ScheduledOptim

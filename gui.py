@@ -21,8 +21,20 @@ checkpoints_dir = 'gui/checkpoints'
 speaker_list_path = 'gui/speakers.json'
 example_list_path = 'gui/examples.json'
 
+article_file = """
+<h4 style="text-align: left;">Parameter descriptions</h4>
+<p><strong>Input Text:&nbsp;</strong>The text to be synthesised, avoid symbols like "!?..." in the end. Not recommend to be longer than 20 words, for those situations, divide it into multiple shorter sentences to synthesis.</p>
+<p><strong>Speaker:&nbsp;</strong>Different speakers have different voice and speech style. Select expected style by trying examples.</p>
+<p><strong>Emotion:&nbsp;</strong>Choose a emotion between Neutral, Angry, Happy, Surprise and Sad.</p>
+<p><strong>Pitch:&nbsp;</strong>Float number between 0.00 and 2.00, controlling the overall pitch of the whole sentence.</p>
+<p><strong>Duration:&nbsp;</strong>Float number between 0.00 and 2.00, controlling the speed of the speech.</p>
+<p><strong>Energy:&nbsp;</strong>Float number betwwen 0.00 and 2.00, controlling the variation of the energy of the whole sentence.</p>
+<p><strong>Checkpoint File: </strong>Model checkpoint to be loaded, ESD_LJSpeech_8000_eng is the most recommended.</p>
+<p><strong>Strict Mode:&nbsp;</strong>Whether synthesis wrong spelled words.</p>
+"""
 
-def tts(text, speaker, emotion, pitch, energy, duration, checkpoint, strict):
+
+def tts(text, speaker, emotion, pitch, duration, energy, checkpoint, strict):
     """
     @param text: text to generate
     @param speaker: the id of a speaker
@@ -33,6 +45,8 @@ def tts(text, speaker, emotion, pitch, energy, duration, checkpoint, strict):
     @param checkpoint: file name of the checkpoint in ./gui/checkpoints
     @return: file name of the generated mel-spectrogram picture and the generated .wav file
     """
+
+    print(f" pitch:{pitch}, duration:{duration}, energy:{energy}")
 
     # Parse emotion id from emotion name
     emotions = {"Neutral": 0, "Angry": 1, "Happy": 2, "Sad": 3, "Surprise": 4}
@@ -162,6 +176,7 @@ if __name__ == "__main__":
                              bring FastSpeech2 to the next level of its controllability while remaining its 
                              train/inference efficiency.</b></center>
                              ''',
+                             article=article_file,
                              examples=load_example_list(),
                              allow_flagging="never"
                              )

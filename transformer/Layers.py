@@ -72,10 +72,6 @@ class ConvNorm(torch.nn.Module):
 
 
 class PostNet(nn.Module):
-    """
-    PostNet: Five 1-d convolution with 512 channels and kernel size 5
-    """
-
     def __init__(
             self,
             n_mel_channels=80,
